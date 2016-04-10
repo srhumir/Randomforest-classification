@@ -1,0 +1,37 @@
+library(caret)
+library(randomForest)
+library(e1071) 
+library(raster)
+library(maptools)
+library(RStoolbox)
+library(rgeos)
+
+warning("Polygon shape file of training area")
+xx <- readShapePoly( file.choose())#, proj4string=CRS("+proj=utm +zone=48 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0 "))
+warning("MNF")
+mnf <- brick(file.choose())
+mnf <- subset(mnf, 1:3)
+mnf <- overlay(mnf, reflectance, 
+               fun = function(x,y) ifelse(is.na(y), NA,x))
+reflectance <- brick(file.choose())
+print("Topographic data")
+topo <- stack(file.choose())
+reflectance <- crop(reflectance,mnf)
+
+shadow <- raster(file.choose())
+slope <- raster(file.choose())
+shadow <- crop(shadow, mnf)
+slope <- crop(slope, mnf)
+y <- stack(list(mnf, reflectance))
+crs(xx) <- crs(y)
+xx <- gBuffer(xx, byid=TRUE, width=0)
+colors <- c("blue", "gray")
+SC    <- superClass(y, trainData = xx, responseCol = "Class_N",
+                    model = "nnet", tuneLength = 1, trainPartition = 0.7)
+warning("Path and name of Output .tif")
+saveRSTBX(SC, file.choose(), format = "GTiff")
+
+major <- focal(SC$map, matrix(1,5,5), function(x) sum(x == x[13]))
+water <- overlay(SC2$map, major, 
+                 fun = function(x,y) ifelse(x == 5 & y >= 3, 1,NA))
+#water <- calc(SC2$map, function(x) ifelse(x == 5 , 1,NA))
