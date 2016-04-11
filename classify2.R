@@ -6,7 +6,7 @@ library(caret)
 library(randomForest)
 library(e1071) 
 library(raster)
-#library(maptools)
+library(maptools)
 library(RStoolbox)
 library(rgeos)
 #get the training polygon shapefile
@@ -36,15 +36,21 @@ Sys.time()
 
 
 train <- extract(toClass, xx, df = TRUE)
+train2 <- train 
+train <- cbind(train, xx@data$Class[train$ID])
+train <- train[complete.cases(train),]
+row.inf <- apply(train, 1, function(x) any(is.infinite(x)))
+train <- train[!row.inf,]
 Sys.time()
-model <- randomForest(x = train[,names(train)[2:(dim(toClass)[3]+1)]],
-                      y = as.factor(xx@data$Class[train$ID]),
+model <- randomForest(x = train[,names(train)[3:(dim(toClass)[3]+2)]],
+                      y = as.factor(train[, ncol(train)]),
                       ntree=501, importance=TRUE)
 
 library(snow)
 
-beginCluster(no_cores)
-classification <- clusterR(toClass, predict, args=list(model), filename = "D:/temp/classificationtexture.tif")
-endCluster()
+#beginCluster(no_cores)
+#classification <- clusterR(toClass, predict, args=list(model), filename = "D:/temp/classificationtexture.tif")
+#endCluster()
 Sys.time()
-#classification <- predict(image, model, filename = "D:/temp/classificationtexture.tif")
+classification <- predict(toClass, model, filename = "D:/temp/classificationtexture1000trees.tif")
+Sys.time()
