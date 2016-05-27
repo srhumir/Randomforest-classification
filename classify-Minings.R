@@ -21,9 +21,13 @@ Reflectance <- stack(file.choose())
 thermal <- stack(file.choose())
 #compute related ratios
 ironoxid <- raster(Reflectance, layer=4)/raster(Reflectance, layer=2)
+ironoxid <- crop(ironoxid, MNF)
 clay  <- raster(Reflectance, layer=6)/raster(Reflectance, layer=7)
+clay <- crop(clay, MNF)
 ratio3 <- raster(Reflectance, layer=7)/raster(Reflectance, layer=3)
+ratio3 <- crop(ratio3, MNF)
 ratio4 <- raster(Reflectance, layer=2)/raster(Reflectance, layer=3)
+ratio4 <- crop(ratio4, MNF)
 quartz <- raster(thermal, layer=1) #first thermal band (band 10)
 #last ratio have different extent
 #crop
@@ -36,50 +40,38 @@ ratioList <- list(ironoxid, clay, ratio3, ratio4, quartz)
 toclass <- stack(c(rasterlist, ratioList))
 
 #extract 
-values <- sampleRandom(toclass, 10000, na.rm=T)
+values <- sampleRandom(toclass, 30000, na.rm=T)
+values <- as.data.frame(values)
 ##when load from disk
 #values <- read.csv(file.choose())
 # values <- values[,-1]
 ##a backup
 valuesBackup <- values
-##No need for ID
-values <- values[,-2]
-#check fot too many NA
-NAs <- sapply(1:dim(toclass2)[3],function(i) sum(is.na(getValues(subset(toclass2,i)))))
-#convert inf to NA for the model to work
-for (i in 1:dim(values)[1]){
-  for (j in 1:dim(values)[2]){
-    if (is.infinite(values[i,j])){values[i,j] <- NA}
-  }
-}
-#fill NAs
-##model
-Nafill <- preProcess(values, method = "bagImpute")
-##fill
-valuesNAfilled <- predict(Nafill, values)
-##check
-sum(is.na(valuesNAfilled))
+
+##check for NA
+sum(is.na(values))
 
 #normalize the data frame to have comparable data
-normal <- preProcess(valuesNAfilled[,-1])
-valuesNormal <- predict(normal, valuesNAfilled[,-1])
+normal <- preProcess(values)
+valuesNormal <- predict(normal, values)
 distances <- dist(valuesNormal)
 clus <- hclust(distances)
 plot(clus)
 #
-cut <- cutree(clus, h=5)
-table(Class, cut)
+cut <- cutree(clus, h=17)
 
-
+#clustering wit kmean
+kclus <- kmeans(valuesNormal, 2) 
+cut <- kclus$cluster
 #train RF model
 train_control <- trainControl(method="cv", number=10)
 
 system.time(
-modelrf <- train(valuesNAfilled[,-1], factor(cut), trControl=train_control, method = "rf")
+modelrf <- train(values, factor(cut), trControl=train_control, method = "rf")
 )
 
 system.time(
-  predraster <- predict(toclass2, modelrf, 
+  predraster <- predict(toclass, modelrf, 
                         na.rm=T,inf.rm = TRUE)
 )
 
