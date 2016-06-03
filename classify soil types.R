@@ -59,25 +59,28 @@ toclass2 <- toclass * soil
 ####shape <- rasterToPolygons(soil)
 
 #trainigs data 
-xx <- readShapePoly(file.choose())
-projection(xx) <- projection(MNF)
+# xx <- readShapePoly(file.choose())
+# projection(xx) <- projection(MNF)
 #extract 
-values <- extract(toclass2, xx, df = TRUE)
+# values <- extract(toclass2, xx, df = TRUE)
 #take out the attributr table of the trainig and assigne ID to polygons
-classes <- data.frame(ID = 1:length(xx@data$CLASS_NAME), xx@data)
-#Assign class to extracted values
-values <- data.frame(Class = classes$CLASS_NAME[values$ID], values)
+# classes <- data.frame(ID = 1:length(xx@data$CLASS_NAME), xx@data)
+# #Assign class to extracted values
+# values <- data.frame(Class = classes$CLASS_NAME[values$ID], values)
 ##when load from disk
 #values <- read.csv(file.choose())
 # values <- values[,-1]
-#drop rows with all zero MNF
-values <- values[values[names(values)[3]] > 0 & !is.na(values[names(values)[3]]),]
-##a backup
-valuesBackup <- values
+# #drop rows with all zero MNF
+# values <- values[values[names(values)[3]] > 0 & !is.na(values[names(values)[3]]),]
+# ##a backup
+# valuesBackup <- values
 ##No need for ID
-values <- values[,-2]
-## keep class seperate for speeding up the training and ...
-Class <- values$Class
+# values <- values[,-2]
+# ## keep class seperate for speeding up the training and ...
+# Class <- values$Class
+
+values <- sampleRandom(toclass, 10000, na.rm=T)
+values <- as.data.frame(values)
 #check fot too many NA
 NAs <- sapply(1:dim(toclass2)[3],function(i) sum(is.na(getValues(subset(toclass2,i)))))
 #convert inf to NA for the model to work
@@ -95,15 +98,15 @@ valuesNAfilled <- predict(Nafill, values)
 sum(is.na(valuesNAfilled))
 
 #normalize the data frame to have comparable data
-normal <- preProcess(valuesNAfilled[,-1])
-valuesNormal <- predict(normal, valuesNAfilled[,-1])
+normal <- preProcess(valuesNAfilled)
+valuesNormal <- predict(normal, valuesNAfilled)
 distances <- dist(valuesNormal)
 clus <- hclust(distances)
 plot(clus)
 #
 cut <- cutree(clus, h=5)
 table(Class, cut)
-
+ ##or with kmean clustering
 
 #train RF model
 train_control <- trainControl(method="cv", number=10)

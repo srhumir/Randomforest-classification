@@ -1,5 +1,7 @@
 #get buffers of probabale mining areas
 #cluster them to find the border of mining sites
+#Equally can be used to classify th whole image if the system can handle it :)
+
 library(caret)
 library(randomForest)
 library(e1071) 
@@ -53,8 +55,8 @@ values <- as.data.frame(values)
 sum(is.na(values))
 
 #normalize the data frame to have comparable data
-normal <- preProcess(values)
-valuesNormal <- predict(normal, values)
+# normal <- preProcess(values)
+# valuesNormal <- predict(normal, values)
 #distances <- dist(valuesNormal)
 #clus <- hclust(distances)
 #plot(clus)
@@ -71,30 +73,33 @@ cut <- kclus$cluster
 #plot(clus)
 #
 #cut <- cutree(clus, h=12)
-year <- "2007-2-"
-for (i in 2:5){
-#clustering wit kmean without normalization
-kclus <- kmeans(values, i) 
-cut <- kclus$cluster
+year <- 2007
+classesNo <- 6:8
+for (i in classesNo){
+        #clustering wit kmean without normalization
+        kclus <- kmeans(values, i) 
+        cut <- kclus$cluster
 
 
-#train RF model
-train_control <- trainControl(method="cv", number=10)
+        #train RF model
+        train_control <- trainControl(method="cv", number=10)
 
-system.time(
-modelrf <- train(values, factor(cut), trControl=train_control, method = "rf")
-)
-print(modelrf$results)
+        system.time(
+        modelrf <- train(values, factor(cut), trControl=train_control, method = "rf")
+        )
+        print(modelrf$results)
 
-system.time(
-  predraster <- predict(toclass, modelrf, 
+        system.time(
+        predraster <- predict(toclass, modelrf, 
                         na.rm=T,inf.rm = TRUE)
-)
+        )
 
-predraster <- calc(predraster, as.integer)
-writeRaster(predraster, 
-            paste("C:\\Reza\\Randomforest classification\\Mining Borders\\Mining_Borders_", year,"_",i,"class_kmean-Notnormal.tif", sep=""))
-print(paste((i-1)*100/4, "%", sep = ""))
+        predraster <- calc(predraster, as.integer)
+        # writeRaster(predraster, 
+        #             paste("C:\\Reza\\Randomforest classification\\Mining Borders\\Mining_Borders_", year,"_",i,"class_kmean-Notnormal.tif", sep=""))
+        writeRaster(predraster, 
+                paste("C:\\Reza\\kmean classification\\Main Image\\","Classification", year,"_",i,"classes_kmean_Reflectance.tif", sep=""))
+        print(paste(floor((i-classesNo[1]+1)*100/length(classesNo)), "%", sep = ""))
 }
 
 

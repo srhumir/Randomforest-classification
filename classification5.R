@@ -13,9 +13,9 @@ MNF <- stack(file.choose())
 #MNF <- dropLayer(MNF, 1)
 names(MNF) <- sapply(1:dim(MNF)[3], function(i) paste("MNF", i, sep="."))
 
-
-mask <- raster(file.choose())
-MNF <- MNF * (mask-1)
+# 
+# mask <- raster(file.choose())
+# MNF <- MNF * (mask-1)
 #load trainig shp
 xx <- readShapePoly( file.choose())
 projection(xx) <- projection(MNF)
@@ -56,7 +56,7 @@ classes <- data.frame(ID = 1:length(xx@data$CLASS_NAME), xx@data)
 values <- data.frame(Class = classes$CLASS_NAME[values$ID], values)
 ##when load from disk
 #values <- read.csv(file.choose())
-# values <- values[,-1]
+#values <- values[,-1]
 #drop rows with all zero MNF
 values <- values[values[names(values)[3]] > 0 & !is.na(values[names(values)[3]]),]
 ##a backup
