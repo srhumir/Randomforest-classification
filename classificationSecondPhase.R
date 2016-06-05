@@ -83,9 +83,29 @@ for (i in classesNo){
 
 
 #was not satisfied with the results. trying supervised RF
+#supervised also was not satisfactory decided to add NDBaI 
+#load dn
+DNlist <- list()
+for (i in 1:6){
+        DN <- raster(file.choose())
+        DN <- crop(DN,toclassdry)
+        DNlist[[i]] <- DN
+}
+
+DN <- stack(DNlist)
+DN6 <- raster(file.choose())
+DN6 <- crop(DN6,toclassdry)
+
+NDBaI <- (raster(DN,5) - DN6)/(raster(DN,5) + DN6)
+NDBI <- (raster(DN,5) - raster(DN,4))/(raster(DN,5) + raster(DN,4))
+
+#NDBI was not so usefull, so add just NDBaI to the raster stack
+toclassdry <- stack(toclassdry, NDBaI)
+#load training data
 xx <- readShapePoly( file.choose())
 projection(xx) <- projection(toclassdry)
 
+#extract values on training data
 values <- extract(toclassdry, xx, df = TRUE)
 #take out the attributr table of the trainig and assigne ID to polygons
 classes <- data.frame(ID = 1:length(xx@data$CLASS_NAME), xx@data)
@@ -124,24 +144,15 @@ system.time(
         modelRF <- train(valuesNAfilled,droplevels(Class), trControl=train_control,
                          method="rf")
 )
+modelRF$finalmodel
 
 #predict on raster
 system.time(
         predraster <- predict(toclass, modelRF,
-                              filename = paste(targetdir, "\\","Classification_drylands","_",2,"classes_RF_ReflectanceTexture.tif", sep=""),
+                              filename = paste(targetdir, "\\","Classification_drylands","_",2,"classes_RF_ReflectanceTextureNDBaI2.tif", sep=""),
                               na.rm=T,inf.rm = TRUE)
 )
 #it seems that "1" is soil and sometimes settelment and 
 #"2" is settelment and sometimes soil
-
-#load dn
-DNlist <- list()
-for (i in 1:6){
-        DN <- raster(file.choose())
-        DN <- crop(DN,toclassdry)
-        DNlist[[i]] <- DN
-}
-
-
 
 
