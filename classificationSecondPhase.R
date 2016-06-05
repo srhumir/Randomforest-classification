@@ -101,12 +101,20 @@ NDBI <- (raster(DN,5) - raster(DN,4))/(raster(DN,5) + raster(DN,4))
 
 #NDBI was not so usefull, so add just NDBaI to the raster stack
 toclassdry <- stack(toclassdry, NDBaI)
+# #lets try adding NDBI too
+# toclassdry <- stack(toclassdry, NDBI) # made the results worse. too mcuh urban
+toclassdry <- dropLayer(toclassdry, nlayers(toclassdry))
+#waht if we forget about texture
+toclassdry <- dropLayer(toclassdry, 7:21)
+
 #load training data
 xx <- readShapePoly( file.choose())
 projection(xx) <- projection(toclassdry)
 
 #extract values on training data
-values <- extract(toclassdry, xx, df = TRUE)
+system.time(
+        values <- extract(toclassdry, xx, df = TRUE)
+)
 #take out the attributr table of the trainig and assigne ID to polygons
 classes <- data.frame(ID = 1:length(xx@data$CLASS_NAME), xx@data)
 #Assign class to extracted values
@@ -144,12 +152,12 @@ system.time(
         modelRF <- train(valuesNAfilled,droplevels(Class), trControl=train_control,
                          method="rf")
 )
-modelRF$finalmodel
+modelRF
 
 #predict on raster
 system.time(
-        predraster <- predict(toclass, modelRF,
-                              filename = paste(targetdir, "\\","Classification_drylands","_",2,"classes_RF_ReflectanceTextureNDBaI2.tif", sep=""),
+        predraster <- predict(toclassdry, modelRF,
+                              filename = paste(targetdir, "\\","Classification_drylands","_",2,"classes_RF_ReflectanceNDBaI.tif", sep=""),
                               na.rm=T,inf.rm = TRUE)
 )
 #it seems that "1" is soil and sometimes settelment and 
