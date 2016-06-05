@@ -22,7 +22,7 @@ MNF <- dropLayer(MNF, c(5,6))
 # #load thermal bands
 # thermal <- stack(file.choose())
 # #compute related ratios
-# ironoxid <- raster(Reflectance, layer=4)/raster(Reflectance, layer=2)
+h# ironoxid <- raster(Reflectance, layer=4)/raster(Reflectance, layer=2)
 # ironoxid <- crop(ironoxid, MNF)
 # clay  <- raster(Reflectance, layer=6)/raster(Reflectance, layer=7)
 # clay <- crop(clay, MNF)
@@ -73,7 +73,7 @@ cut <- kclus$cluster
 #plot(clus)
 #
 #cut <- cutree(clus, h=12)
-year <- 2007
+year <- "06-07-2011"
 classesNo <- 6:8
 for (i in classesNo){
         #clustering wit kmean without normalization
