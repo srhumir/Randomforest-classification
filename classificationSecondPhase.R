@@ -72,7 +72,7 @@ targetdir <- paste(savepath, "\\", year, sep="")
 classesNo <- 3:8
 for (i in classesNo){
         predraster <- kmeanRF(toclassdry, i, values)
-        if (!dir.exists(targetdir)){
+if (!dir.exists(targetdir)){
                 dir.create(targetdir)
         }
         writeRaster(predraster,
@@ -101,11 +101,22 @@ NDBI <- (raster(DN,5) - raster(DN,4))/(raster(DN,5) + raster(DN,4))
 
 #NDBI was not so usefull, so add just NDBaI to the raster stack
 toclassdry <- stack(toclassdry, NDBaI)
+#compute related ratios
+ironoxid <- raster(image, 3)/ raster(image, 1)
+saprolite <- raster(image, 5)/ raster(image, 4)
+clay <- raster(image, 5)/ raster(image, 6)
+ferros <- raster(image, 4)/ raster(image, 2)
+settelment <- raster(image, 3)/ raster(image, 5)
+ratioList <- list(ironoxid, saprolite, clay, ferros, settelment)
+
+toclassdry <- stack(c(list(toclassdry), ratioList))
+# # removing textures and use just ratios
+# toclassdry <- dropLayer(toclassdry, 7:21)
 # #lets try adding NDBI too
 # toclassdry <- stack(toclassdry, NDBI) # made the results worse. too mcuh urban
-toclassdry <- dropLayer(toclassdry, nlayers(toclassdry))
-#waht if we forget about texture
-toclassdry <- dropLayer(toclassdry, 7:21)
+# toclassdry <- dropLayer(toclassdry, nlayers(toclassdry))
+
+
 
 #load training data
 xx <- readShapePoly( file.choose())
@@ -143,7 +154,10 @@ Nafill <- preProcess(values[-1], method = "bagImpute")
 valuesNAfilled <- predict(Nafill, values[-1])
 ##check
 sum(is.na(valuesNAfilled))
-
+# #Omit roof
+# omitindex <- which(Class == levels(Class)[4])
+# valuesNAfilled <- valuesNAfilled[-omitindex,]
+# Class <- Class[-omitindex]
 # define training control
 train_control <- trainControl(method="cv", number=10)
 
@@ -157,7 +171,7 @@ modelRF
 #predict on raster
 system.time(
         predraster <- predict(toclassdry, modelRF,
-                              filename = paste(targetdir, "\\","Classification_drylands","_",2,"classes_RF_ReflectanceNDBaI.tif", sep=""),
+                              filename = paste(targetdir, "\\","Classification_drylands","_",2,"classes_RF_ReflectanceTextureNDBaIRatiosNoRoof.tif", sep=""),
                               na.rm=T,inf.rm = TRUE)
 )
 

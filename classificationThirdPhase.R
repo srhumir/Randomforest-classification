@@ -16,17 +16,33 @@ mask2[getValues(predraster) != 2 | is.na(getValues(predraster))] <- NA
 reflectance1 <- mask(image, mask1)
 reflectance2 <- mask(image, mask2)
 
+# #load thermal bands
+# thermal <- stack(file.choose())
+# thermal <- crop(thermal, reflectace1)
+#compute related ratios
+ironoxid <- raster(reflectance1, 3)/ raster(reflectance1, 1)
+saprolite <- raster(reflectance1, 5)/ raster(reflectance1, 4)
+clay <- raster(reflectance1, 5)/ raster(reflectance1, 6)
+ferros <- raster(reflectance1, 4)/ raster(reflectance1, 2)
+settelment <- raster(reflectance1, 3)/ raster(reflectance1, 5)
+
+
+ratioList <- list(ironoxid, saprolite, clay, ferros, settelment)
+
+##to be continiued#############
+
+
 system.time(
 reflectance1values <- getValues(reflectance1)
 )
 reflectance1values <- as.data.frame(reflectance1values)
 
-classesNo <- 3:8
+classesNo <- 9:10
 system.time(
 for (i in classesNo){
-        predraster <- kmeanRaster(image = image, imagevalues = reflectance1values, i)
+        predraster <- kmeanRaster(image = reflectance1, imagevalues = reflectance1values, i)
         writeRaster(predraster,
-                    paste(savepath,i,"kmeanof1.tif", sep=""))
+                    paste(savepath,i,"Classes-kmeanof1.tif", sep=""))
         print(paste(floor((i-classesNo[1]+1)*100/length(classesNo)), "%", sep = ""))
         
 })
