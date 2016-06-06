@@ -6,7 +6,9 @@ cleanup <- function(v){
         else return(v[5])
 }
 #get the classification of the whole image 
-##gatehr togheter Green land, Dry land and Wet land
+# For 06.07.2011 I used 
+# Classification06-07-2011_8classes_kmean_Reflectance.tif
+##gatehr togheter Dry land and Wet land
 ##classify each of classes to subclasse. Necessaruly use NDBaI etc
 
 library(caret)
