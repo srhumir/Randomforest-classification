@@ -160,7 +160,4 @@ system.time(
                               filename = paste(targetdir, "\\","Classification_drylands","_",2,"classes_RF_ReflectanceNDBaI.tif", sep=""),
                               na.rm=T,inf.rm = TRUE)
 )
-#it seems that "1" is soil and sometimes settelment and 
-#"2" is settelment and sometimes soil
-
 
