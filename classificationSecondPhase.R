@@ -10,7 +10,7 @@ cleanup <- function(v){
 # Classification06-07-2011_8classes_kmean_Reflectance.tif
 ##gatehr togheter Dry land and Wet land
 ##classify each of classes to subclasse. Necessaruly use NDBaI etc
-
+##this codes are just for dryland
 library(caret)
 library(randomForest)
 library(e1071) 
